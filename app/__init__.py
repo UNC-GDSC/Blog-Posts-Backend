@@ -31,6 +31,14 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     CORS(app)
 
+    # Initialize rate limiter
+    from app.utils.rate_limiter import init_limiter
+    init_limiter(app)
+
+    # Initialize middleware
+    from app.utils.middleware import init_middleware
+    init_middleware(app)
+
     # Initialize Swagger documentation
     swagger_config = {
         "headers": [],
@@ -70,6 +78,10 @@ def create_app(config_name=None):
 
     # Configure logging
     configure_logging(app)
+
+    # Register CLI commands
+    from app.cli import register_commands
+    register_commands(app)
 
     # Create database tables
     with app.app_context():

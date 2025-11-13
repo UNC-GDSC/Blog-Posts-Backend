@@ -1,17 +1,18 @@
 version: '3.8'
 
 services:
-  web:
+  blog-api:
     build: .
     container_name: blog-api
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - DATABASE_URI=sqlite:///blog.db
-      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
     volumes:
       - ./instance:/app/instance
+      - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
@@ -19,20 +20,22 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - blog-network
 
-  # Optional: PostgreSQL database (uncomment to use)
-  # db:
-  #   image: postgres:15-alpine
-  #   container_name: blog-db
-  #   environment:
-  #     - POSTGRES_USER=blog_user
-  #     - POSTGRES_PASSWORD=blog_password
-  #     - POSTGRES_DB=blog_db
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
+  nginx:
+    build: ./nginx
+    container_name: blog-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - blog-api
+    restart: unless-stopped
+    networks:
+      - blog-network
 
-# volumes:
-#   postgres_data:
+networks:
+  blog-network:
+    driver: bridge
+
+# For production with PostgreSQL, see docker-compose.prod.yml
