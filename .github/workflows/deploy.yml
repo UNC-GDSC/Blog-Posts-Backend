@@ -1,0 +1,41 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Run tests before deployment
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pytest
+
+    - name: Deploy notification
+      run: |
+        echo "Deploying to production..."
+        echo "Version: ${{ github.event.release.tag_name }}"
+
+    # Add your deployment steps here (e.g., deploy to Heroku, AWS, etc.)
+    # Example for Heroku:
+    # - name: Deploy to Heroku
+    #   uses: akhileshns/heroku-deploy@v3.12.14
+    #   with:
+    #     heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+    #     heroku_app_name: "your-app-name"
+    #     heroku_email: "your-email@example.com"
